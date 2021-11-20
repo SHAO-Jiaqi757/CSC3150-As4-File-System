@@ -15,6 +15,7 @@ typedef uint16_t u16;
 #define LS_D 0
 #define LS_S 1
 #define RM 2
+#define ERROR UINT32_MAX
 struct SuperBlock
 {
     int free_block_count; // how many free block
@@ -46,14 +47,16 @@ struct FileSystem
 
     SuperBlock *superBlock_ptr;
     struct FCB *FCB_arr;
-    u32 *fileContent_ptr;
+    uchar *fileContent_ptr;
 };
 
 __device__ void init_volume(FileSystem *fs);
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
+                        __device__ void compact(FileSystem *fs, u16 block_num, u16 start_block);
                         int FCB_SIZE, int FCB_ENTRIES, int VOLUME_SIZE,
                         int STORAGE_BLOCK_SIZE, int MAX_FILENAME_SIZE,
                         int MAX_FILE_NUM, int MAX_FILE_SIZE, int FILE_BASE_ADDRESS);
+__device__ void compact(FileSystem *fs, u16 block_num, u16 start_block);
 
 __device__ u32 fs_open(FileSystem *fs, char *s, int op);
 __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp);
