@@ -1,11 +1,11 @@
 #ifndef VIRTUAL_MEMORY_H
 #define VIRTUAL_MEMORY_H
 
-// #include <cuda.h>
-// #include <cuda_runtime.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <inttypes.h>
-#define __device__
-#define __managed__
+//#define __device__
+//#define __managed__
 
 typedef unsigned char uchar;
 typedef uint32_t u32;
@@ -22,7 +22,7 @@ struct SuperBlock
     u16 free_block_start; // the first start free block number;
     int file_num = 0;     // how many files in the storge
 };
-
+#pragma pack(1)
 struct FCB
 {
     u32 modified_time; // 4 bytes
@@ -30,7 +30,8 @@ struct FCB
     u16 file_size;     // 2 bytes
     u16 start_block;
     char filename[20];
-} __attribute__((packed));
+};
+#pragma pack()
 
 struct FileSystem
 {
@@ -52,11 +53,13 @@ struct FileSystem
 
 __device__ void init_volume(FileSystem *fs);
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
-                        __device__ void compact(FileSystem *fs, u16 block_num, u16 start_block);
                         int FCB_SIZE, int FCB_ENTRIES, int VOLUME_SIZE,
                         int STORAGE_BLOCK_SIZE, int MAX_FILENAME_SIZE,
                         int MAX_FILE_NUM, int MAX_FILE_SIZE, int FILE_BASE_ADDRESS);
+__device__ char *my_strcpy(char *dst, const char *src);
+__device__ int my_strcmp(char *s1, char *s2);
 __device__ void compact(FileSystem *fs, u16 block_num, u16 start_block);
+__device__ void remove_file(FileSystem *fs, int fp);
 
 __device__ u32 fs_open(FileSystem *fs, char *s, int op);
 __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp);

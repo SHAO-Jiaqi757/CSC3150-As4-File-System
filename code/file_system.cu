@@ -1,10 +1,10 @@
 ﻿#include "file_system.h"
-// #include <cuda.h>
-// #include <cuda_runtime.h>
+#include <cuda.h>
+#include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstring>
-
+// #include <cstring>
+#define debug
 __device__ __managed__ u32 gtime = 0;
 
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
@@ -33,13 +33,13 @@ __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
 __device__ void init_volume(FileSystem *fs)
 {
   fs->superBlock_ptr = reinterpret_cast<SuperBlock *>(fs->volume);
-  fs->superBlock_ptr->free_block_count = fs->STORAGE_SIZE / fs->STORAGE_BLOCK_SIZE;
+  fs->superBlock_ptr->free_block_count = fs->MAX_FILE_SIZE / fs->STORAGE_BLOCK_SIZE;
   fs->superBlock_ptr->free_block_start = 0;
 
-  fs->FCB_arr = reinterpret_cast<FCB *>(fs->volume + 4 * 1024);
+  fs->FCB_arr = reinterpret_cast<struct FCB *>(fs->volume + fs->SUPERBLOCK_SIZE);
 
   fs->fileContent_ptr = reinterpret_cast<uchar *>(fs->volume + fs->FILE_BASE_ADDRESS);
-#ifdef DEBUG
+#ifdef debug
   printf("%u\n", fs->fileContent_ptr);
 #endif
 }
@@ -53,11 +53,11 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
   for (int i = 0; i < file_num; i++)
   {
     // 1. find
-    if (strcmp(fs->FCB_arr[i].filename, s) == 0) // equal;
+    if (my_strcmp(fs->FCB_arr[i].filename, s) == 0) // equal;
     {
       if (op == G_READ)
         return i;
-      else if (op = G_WRITE)
+      else if (op == G_WRITE)
       {
         // rm the file,
         create_time = fs->FCB_arr[i].create_time;
@@ -69,14 +69,21 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
   if (op == G_WRITE) // 2.1 op == G_READ
   {
     // create a file
-    strcpy(fs->FCB_arr[file_num].filename, s);
-    fs->FCB_arr[file_num] = {.modified_time = gtime, .file_size = 0, .start_block = free_block_start};
+    my_strcpy(fs->FCB_arr[file_num].filename, s);
+    fs->FCB_arr[file_num].modified_time = gtime;
+    fs->FCB_arr[file_num].file_size = 0;
+    printf("fs->FCB_arr[%d].file_size: %d\n", file_num, fs->FCB_arr[file_num].file_size);
+    fs->FCB_arr[file_num].start_block = free_block_start;
     fs->FCB_arr[file_num].create_time = create_time;
     gtime++;
     fs->superBlock_ptr->free_block_start++;
     fs->superBlock_ptr->free_block_count--;
     fs->superBlock_ptr->file_num++;
-    return fs->superBlock_ptr->file_num - 1;
+#ifdef DEBUG
+    printf("create fp: %d, size: %d, start_block \n", fs->superBlock_ptr->file_num - 1, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
+#endif
+    return fs->superBlock_ptr->file_num -
+           1;
   }
 
   // 2.2 return 0
@@ -105,15 +112,14 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
 __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 {
   u16 file_size = fs->FCB_arr[fp].file_size;
-  u32 create_time = fs->FCB_arr[fp].create_time;
-  char *filename = fs->FCB_arr[fp].filename;
+  // u32 create_time = fs->FCB_arr[fp].create_time;
+  // char* filename = fs->FCB_arr[fp].filename;
   u16 start_block = fs->FCB_arr[fp].start_block;
   u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
   int block_needs = (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
   int origin_blocks = (file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
 
   int free_block_count = fs->superBlock_ptr->free_block_count;
-  int free_block_start = fs->superBlock_ptr->free_block_start;
 
   if (block_needs - origin_blocks > free_block_count) // need extra block exceeding total free blocks
   {
@@ -190,4 +196,36 @@ __device__ void remove_file(FileSystem *fs, int fp)
   fs->superBlock_ptr->file_num--;
   fs->superBlock_ptr->free_block_start -= (block_num);
   fs->superBlock_ptr->free_block_count += (block_num);
+}
+__device__ char *my_strcpy(char *dst, const char *src) //[1]
+{
+
+  char *ret = dst; //[3]
+
+  //	while ((*dst++ = *src++) != '\0'); //[4]
+  for (size_t i = 0; i < 20; i++)
+  {
+    if (*src == '\0')
+      break;
+    *dst = *src;
+    ++dst;
+    ++src;
+  }
+
+  return ret;
+}
+__device__ int my_strcmp(char *s1, char *s2)
+{
+  int i = 0;
+  while (1)
+  {
+    if (s1[i] != s2[i])
+      return -1;
+    if (s1[i] == '\0' && s2[i] == '\0')
+    {
+      return 0;
+    }
+    i++;
+  }
+  return -1;
 }
