@@ -61,7 +61,16 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
       {
         // rm the file,
         create_time = fs->FCB_arr[i].create_time;
+
+#ifdef debug
+        printf("rm fsb[%d] \n", i);
+        printf("Before remove: file_num=%d, free_block_start=%d free_block_count=%d \n", fs->superBlock_ptr->file_num, fs->superBlock_ptr->free_block_start, fs->superBlock_ptr->free_block_count);
+#endif
         remove_file(fs, i);
+
+#ifdef debug
+        printf("After remove: file_num=%d, free_block_start=%d free_block_count=%d \n", fs->superBlock_ptr->file_num, fs->superBlock_ptr->free_block_start, fs->superBlock_ptr->free_block_count);
+#endif
       }
     }
   }
@@ -72,18 +81,16 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
     my_strcpy(fs->FCB_arr[file_num].filename, s);
     fs->FCB_arr[file_num].modified_time = gtime;
     fs->FCB_arr[file_num].file_size = 0;
-    printf("fs->FCB_arr[%d].file_size: %d\n", file_num, fs->FCB_arr[file_num].file_size);
-    fs->FCB_arr[file_num].start_block = free_block_start;
+    fs->FCB_arr[file_num].start_block = fs->superBlock_ptr->free_block_start;
     fs->FCB_arr[file_num].create_time = create_time;
     gtime++;
     fs->superBlock_ptr->free_block_start++;
     fs->superBlock_ptr->free_block_count--;
     fs->superBlock_ptr->file_num++;
-#ifdef DEBUG
-    printf("create fp: %d, size: %d, start_block \n", fs->superBlock_ptr->file_num - 1, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
+#ifdef debug
+    printf("create fp: %d, size: %d, start_block: %d \n", fs->superBlock_ptr->file_num - 1, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
 #endif
-    return fs->superBlock_ptr->file_num -
-           1;
+    return fs->superBlock_ptr->file_num - 1;
   }
 
   // 2.2 return 0
@@ -106,6 +113,9 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
   for (u32 i = start_addr; i < end_addr; i++)
   {
     output[i - start_addr] = *(fs->fileContent_ptr + i);
+#ifdef debug
+    printf("output[%d]: %c \n", i - start_addr, output[i - start_addr]);
+#endif
   }
 }
 
@@ -117,7 +127,7 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
   u16 start_block = fs->FCB_arr[fp].start_block;
   u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
   int block_needs = (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
-  int origin_blocks = (file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
+  int origin_blocks = file_size == 0 ? 1 : (file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
 
   int free_block_count = fs->superBlock_ptr->free_block_count;
 
@@ -131,12 +141,17 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
   // write to file
   for (u16 i = start_addr; i < start_addr + size; i++)
   {
-    *(fs->fileContent_ptr + i) = input[i - start_addr];
+    *(fs->fileContent_ptr + i) = *input + (i - start_addr);
   }
 
   // update FCB_arr
   fs->FCB_arr[fp].file_size = size;
   fs->FCB_arr[fp].modified_time = gtime++;
+
+  // update superBlock_ptr
+  int delta_block = block_needs - origin_blocks;
+  fs->superBlock_ptr->free_block_count -= delta_block;
+  fs->superBlock_ptr->free_block_start += delta_block;
 }
 __device__ void fs_gsys(FileSystem *fs, int op)
 {
@@ -178,8 +193,10 @@ __device__ void remove_file(FileSystem *fs, int fp)
 {
 
   u16 start_block = fs->FCB_arr[fp].start_block;
-  u16 block_num = (fs->FCB_arr[fp].file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
-
+  u16 block_num = fs->FCB_arr[fp].file_size == 0 ? 1 : (fs->FCB_arr[fp].file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
+#ifdef debug
+  printf("rm %d, file_size: %d, block_num: %d \n", fp, fs->FCB_arr[fp].file_size, block_num);
+#endif
   // update FCB
   for (int i = fp; i < fs->superBlock_ptr->file_num - 1; i++)
   {
