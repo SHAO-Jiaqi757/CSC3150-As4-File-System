@@ -121,24 +121,6 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
     printf("ERROR: no enough space!\n");
     return ERROR;
   }
-  else if (block_needs - origin_blocks != 0) // not match block size
-  {
-    // can not be expended, need compact
-    // remove the file
-    fs_gsys(fs, RM, filename);
-    // append new file
-    // create a file
-    int new_fp = fs->superBlock_ptr->file_num;
-
-    strcpy(fs->FCB_arr[new_fp].filename, filename);
-    fs->FCB_arr[new_fp] = {.create_time = create_time, .start_block = fs->superBlock_ptr->free_block_start};
-    fs->superBlock_ptr->free_block_start += block_needs;
-    fs->superBlock_ptr->free_block_count -= block_needs;
-    fs->superBlock_ptr->file_num++;
-
-    start_addr = fs->FCB_arr[new_fp].start_block * fs->STORAGE_BLOCK_SIZE;
-    fp = new_fp;
-  }
 
   // write to file
   for (u16 i = start_addr; i < start_addr + size; i++)
