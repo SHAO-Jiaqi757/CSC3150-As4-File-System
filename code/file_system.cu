@@ -5,7 +5,7 @@
 #include <stdlib.h>
 // #include <cstring>
 // #define debug
-#define sort_debug
+// #define sort_debug
 __device__ __managed__ u32 gtime = 0;
 
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
@@ -81,16 +81,16 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
     if (op == G_WRITE) // 2.1 op == G_READ
     {
         // create a file
-        int new_fp = fs->superBlock_ptr->free_block_start;
+        int new_fp = fs->superBlock_ptr->file_num;
         my_strcpy(fs->FCB_arr[new_fp].filename, s);
-#ifdef debug
+#ifdef sort_debug
         printf("COPY fp[%d]: %s-> %s \n", new_fp, s, fs->FCB_arr[new_fp].filename);
 #endif
-        fs->FCB_arr[new_fp].modified_time = gtime;
+        fs->FCB_arr[new_fp].modified_time = ++gtime;
         fs->FCB_arr[new_fp].file_size = 0;
         fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start;
         fs->FCB_arr[new_fp].create_time = create_time;
-        gtime++;
+
         fs->superBlock_ptr->free_block_start++;
         fs->superBlock_ptr->free_block_count--;
         fs->superBlock_ptr->file_num++;
@@ -157,12 +157,20 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 
     // update FCB_arr
     fs->FCB_arr[fp].file_size = size;
-    fs->FCB_arr[fp].modified_time = gtime++;
+    fs->FCB_arr[fp].modified_time = ++gtime;
 
     // update superBlock_ptr
     int delta_block = block_needs - origin_blocks;
     fs->superBlock_ptr->free_block_count -= delta_block;
     fs->superBlock_ptr->free_block_start += delta_block;
+
+#ifdef sort_debug
+    printf("----------\n");
+    for (int i = 0; i < fs->superBlock_ptr->file_num; i++)
+    {
+        printf("[%d].filename: %s \n", i, fs->FCB_arr[i].filename);
+    }
+#endif
 }
 __device__ void fs_gsys(FileSystem *fs, int op)
 {
@@ -178,7 +186,7 @@ __device__ void fs_gsys(FileSystem *fs, int op)
         // LS_D list all files name in the directory and order by modified time of files.
         sort_file(fs, LS_D);
 
-        for (int i = 0; i < fs->superBlock_ptr->file_num; i++)
+        for (int i = fs->superBlock_ptr->file_num - 1; i >= 0; i--)
         {
             printf("%s \n", fs->FCB_arr[i].filename);
         }
@@ -299,11 +307,12 @@ __device__ void swap_file(FileSystem *fs, int fp1, int fp2)
     char tmp_filename[20];
     my_strcmp(tmp_filename, fs->FCB_arr[fp1].filename);
 
-    fs->FCB_arr[fp1].modified_time = fs->FCB_arr[fp2].modified_time;
-    fs->FCB_arr[fp1].create_time = fs->FCB_arr[fp2].create_time;
-    fs->FCB_arr[fp1].file_size = fs->FCB_arr[fp2].file_size;
-    fs->FCB_arr[fp1].start_block = fs->FCB_arr[fp2].start_block;
-    my_strcmp(fs->FCB_arr[fp1].filename, fs->FCB_arr[fp2].filename);
+    fs->FCB_arr[fp1] = fs->FCB_arr[fp2];
+    // fs->FCB_arr[fp1].modified_time = fs->FCB_arr[fp2].modified_time;
+    // fs->FCB_arr[fp1].create_time = fs->FCB_arr[fp2].create_time;
+    // fs->FCB_arr[fp1].file_size = fs->FCB_arr[fp2].file_size;
+    // fs->FCB_arr[fp1].start_block = fs->FCB_arr[fp2].start_block;
+    // my_strcmp(fs->FCB_arr[fp1].filename, fs->FCB_arr[fp2].filename);
 
     fs->FCB_arr[fp2].modified_time = tmp_modified_time;
     fs->FCB_arr[fp2].create_time = tmp_create_time;
