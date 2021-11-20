@@ -61,7 +61,7 @@ __device__ int my_strcmp(char *s1, char *s2);
 __device__ void compact(FileSystem *fs, u16 block_num, u16 start_block);
 __device__ void remove_file(FileSystem *fs, int fp);
 __device__ void sort_file(FileSystem *fs, int op);
-__device__ void swap_file(FileSystem *fs, int fp1, int fp2);
+
 __device__ u32 fs_open(FileSystem *fs, char *s, int op);
 __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp);
 __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp);
