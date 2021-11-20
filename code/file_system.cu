@@ -107,7 +107,7 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
         // printf("create fp: %d, size: %d, start_block: %d \n", file_num, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
         print_fcb(fs, new_fp);
 #endif
-        return file_num;
+        return new_fp;
     }
 
     // 2.2 return ERROR
@@ -205,8 +205,8 @@ __device__ void fs_gsys(FileSystem *fs, int op, char *s)
 
 __device__ void compact(FileSystem *fs, u16 block_num, u16 start_block)
 {
-    uchar *dst = fs->fileContent_ptr + start_block * fs->STORAGE_BLOCK_SIZE;
-    uchar *src = fs->fileContent_ptr + (start_block + block_num) * fs->STORAGE_BLOCK_SIZE;
+    auto dst = fs->fileContent_ptr + start_block * fs->STORAGE_BLOCK_SIZE;
+    auto src = fs->fileContent_ptr + (start_block + block_num) * fs->STORAGE_BLOCK_SIZE;
     int count = fs->superBlock_ptr->free_block_start - (start_block + block_num);
     memcpy(dst, src, count * fs->STORAGE_BLOCK_SIZE);
 }
