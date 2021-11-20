@@ -36,15 +36,15 @@ struct FCB
 struct FileSystem
 {
     uchar *volume;
-    int SUPERBLOCK_SIZE;
-    int FCB_SIZE;
-    int FCB_ENTRIES;
-    int STORAGE_SIZE;
-    int STORAGE_BLOCK_SIZE;
-    int MAX_FILENAME_SIZE;
-    int MAX_FILE_NUM;
-    int MAX_FILE_SIZE;
-    int FILE_BASE_ADDRESS;
+    int SUPERBLOCK_SIZE;    // 4096
+    int FCB_SIZE;           // 32
+    int FCB_ENTRIES;        // 1024
+    int STORAGE_SIZE;       // 1085440=4096+32768+1048576
+    int STORAGE_BLOCK_SIZE; // 32
+    int MAX_FILENAME_SIZE;  // 20
+    int MAX_FILE_NUM;       // 1024
+    int MAX_FILE_SIZE;      // 1048576
+    int FILE_BASE_ADDRESS;  // 36864=4096+32768
 
     SuperBlock *superBlock_ptr;
     struct FCB *FCB_arr;
