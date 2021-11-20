@@ -17,9 +17,6 @@ __device__ u32 size_to_block_number(FileSystem *fs, u32 size)
 {
     return size == 0 ? 1 : (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
 }
-__device__ u32 block_id_to_size(u32 size)
-{
-}
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
                         int FCB_SIZE, int FCB_ENTRIES, int VOLUME_SIZE,
                         int STORAGE_BLOCK_SIZE, int MAX_FILENAME_SIZE,
@@ -74,7 +71,7 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
 
             else if (op == G_WRITE)
             {
-                // rm the file,
+                // rm the file
                 create_time = fs->FCB_arr[i].create_time;
 
 #ifdef debug
@@ -89,33 +86,32 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
             }
         }
     }
-}
-// 2. create empty file
-if (op == G_WRITE) // 2.1 op == G_READ
-{
-    // create a file
-    int new_fp = fs->superBlock_ptr->free_block_start;
-    my_strcpy(fs->FCB_arr[new_fp].filename, s);
+    // 2. create empty file
+    if (op == G_WRITE) // 2.1 op == G_READ
+    {
+        // create a file
+        int new_fp = fs->superBlock_ptr->free_block_start;
+        my_strcpy(fs->FCB_arr[new_fp].filename, s);
 #ifdef debug
-    printf("COPY fp[%d]: %s-> %s \n", new_fp, s, fs->FCB_arr[new_fp].filename);
+        printf("COPY fp[%d]: %s-> %s \n", new_fp, s, fs->FCB_arr[new_fp].filename);
 #endif
-    fs->FCB_arr[new_fp].modified_time = gtime;
-    fs->FCB_arr[new_fp].file_size = 0;
-    fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start;
-    fs->FCB_arr[new_fp].create_time = create_time;
-    gtime++;
-    fs->superBlock_ptr->free_block_start++;
-    fs->superBlock_ptr->free_block_count--;
-    fs->superBlock_ptr->file_num++;
+        fs->FCB_arr[new_fp].modified_time = gtime;
+        fs->FCB_arr[new_fp].file_size = 0;
+        fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start;
+        fs->FCB_arr[new_fp].create_time = create_time;
+        gtime++;
+        fs->superBlock_ptr->free_block_start++;
+        fs->superBlock_ptr->free_block_count--;
+        fs->superBlock_ptr->file_num++;
 #ifdef debug
-    // printf("create fp: %d, size: %d, start_block: %d \n", file_num, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
-    print_fcb(fs, file_num);
+        // printf("create fp: %d, size: %d, start_block: %d \n", file_num, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
+        print_fcb(fs, new_fp);
 #endif
-    return file_num;
-}
+        return file_num;
+    }
 
-// 2.2 return ERROR
-return ERROR;
+    // 2.2 return ERROR
+    return ERROR;
 }
 
 __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
@@ -128,15 +124,14 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
     u16 file_size = fs->FCB_arr[fp].file_size;
     if (size > file_size)
         size = file_size;
-    // u16 end_block = start_block + size / fs->STORAGE_BLOCK_SIZE;
     u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
     u32 end_addr = start_addr + size;
 #ifdef debug
     printf("In read >> start_addr = %d, end_addr = %d\n", start_addr, end_addr);
-#endif // debug
+#endif
     for (u32 i = start_addr; i < end_addr; i++)
     {
-        output[i - start_addr] = *(fs->fileContent_ptr + i);
+        output[i - start_addr] = fs->fileContent_ptr[i];
 #ifdef debug
         printf("output[%d]: %c \n", i - start_addr, output[i - start_addr]);
 #endif
@@ -145,13 +140,14 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
 
 __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 {
-    u16 file_size = fs->FCB_arr[fp].file_size;
+    u16 origin_size = fs->FCB_arr[fp].file_size;
     // u32 create_time = fs->FCB_arr[fp].create_time;
     // char* filename = fs->FCB_arr[fp].filename;
     u16 start_block = fs->FCB_arr[fp].start_block;
     u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
-    int block_needs = (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
-    int origin_blocks = file_size == 0 ? 1 : (file_size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
+    // int block_needs = (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
+    int block_needs = size_to_block_number(fs, size);
+    int origin_blocks = size_to_block_number(fs, origin_size);
 
     int free_block_count = fs->superBlock_ptr->free_block_count;
 
@@ -163,10 +159,9 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
     }
 
     // write to file
-
     for (u16 i = start_addr; i < start_addr + size; i++)
     {
-        *(fs->fileContent_ptr + i) = input[i - start_addr];
+        fs->fileContent_ptr[i] = input[i - start_addr];
     }
 
     // update FCB_arr
@@ -174,10 +169,11 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
     fs->FCB_arr[fp].modified_time = gtime++;
 
     // update superBlock_ptr
-    int delta_block = block_needs - origin_blocks;
-    fs->superBlock_ptr->free_block_count -= delta_block;
-    fs->superBlock_ptr->free_block_start += delta_block;
+    int delta_blocks = block_needs - origin_blocks;
+    fs->superBlock_ptr->free_block_count -= delta_blocks;
+    fs->superBlock_ptr->free_block_start += delta_blocks;
 }
+
 __device__ void fs_gsys(FileSystem *fs, int op)
 {
     if (op == LS_S)
@@ -222,7 +218,7 @@ __device__ void remove_file(FileSystem *fs, int fp)
 #ifdef debug
     printf("rm %d, file_size: %d, block_num: %d \n", fp, fs->FCB_arr[fp].file_size, block_num);
 #endif
-    // update FCB
+    // compact FCB
     for (int i = fp; i < fs->superBlock_ptr->file_num - 1; i++)
     {
         fs->FCB_arr[i] = fs->FCB_arr[i + 1];
