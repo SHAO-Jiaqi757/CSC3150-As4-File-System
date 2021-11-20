@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 // #include <cstring>
-#define debug
+// #define debug
 __device__ __managed__ u32 gtime = 0;
 
 __device__ void fs_init(FileSystem *fs, uchar *volume, int SUPERBLOCK_SIZE,
@@ -53,10 +53,12 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
   for (int i = 0; i < file_num; i++)
   {
     // 1. find
+
     if (my_strcmp(fs->FCB_arr[i].filename, s) == 0) // equal;
     {
       if (op == G_READ)
         return i;
+
       else if (op == G_WRITE)
       {
         // rm the file,
@@ -78,11 +80,15 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
   if (op == G_WRITE) // 2.1 op == G_READ
   {
     // create a file
-    my_strcpy(fs->FCB_arr[file_num].filename, s);
-    fs->FCB_arr[file_num].modified_time = gtime;
-    fs->FCB_arr[file_num].file_size = 0;
-    fs->FCB_arr[file_num].start_block = fs->superBlock_ptr->free_block_start;
-    fs->FCB_arr[file_num].create_time = create_time;
+    int new_fp = fs->superBlock_ptr->free_block_start;
+    my_strcpy(fs->FCB_arr[new_fp].filename, s);
+#ifdef debug
+    printf("COPY fp[%d]: %s-> %s \n", new_fp, s, fs->FCB_arr[new_fp].filename);
+#endif
+    fs->FCB_arr[new_fp].modified_time = gtime;
+    fs->FCB_arr[new_fp].file_size = 0;
+    fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start;
+    fs->FCB_arr[new_fp].create_time = create_time;
     gtime++;
     fs->superBlock_ptr->free_block_start++;
     fs->superBlock_ptr->free_block_count--;
@@ -110,6 +116,9 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
   // u16 end_block = start_block + size / fs->STORAGE_BLOCK_SIZE;
   u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
   u32 end_addr = start_addr + size;
+#ifdef debug
+  printf("In read >> start_addr = %d, end_addr = %d\n", start_addr, end_addr);
+#endif // debug
   for (u32 i = start_addr; i < end_addr; i++)
   {
     output[i - start_addr] = *(fs->fileContent_ptr + i);
@@ -139,9 +148,10 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
   }
 
   // write to file
+
   for (u16 i = start_addr; i < start_addr + size; i++)
   {
-    *(fs->fileContent_ptr + i) = *input + (i - start_addr);
+    *(fs->fileContent_ptr + i) = input[i - start_addr];
   }
 
   // update FCB_arr
