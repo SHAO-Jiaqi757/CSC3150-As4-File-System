@@ -228,7 +228,10 @@ __device__ char *my_strcpy(char *dst, const char *src) //[1]
     for (size_t i = 0; i < 20; i++)
     {
         if (*src == '\0')
+        {
+            *dst = *src;
             break;
+        }
         *dst = *src;
         ++dst;
         ++src;
