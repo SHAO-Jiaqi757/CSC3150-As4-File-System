@@ -20,7 +20,7 @@ struct SuperBlock
 {
     int free_block_count; // how many free block
     u16 free_block_start; // the first start free block number;
-    int file_num = 0;     // how many files in the storge
+    int total_file = 0;   // how many files in the storge
 };
 #pragma pack(1)
 struct FCB

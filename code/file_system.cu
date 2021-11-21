@@ -40,42 +40,27 @@ __device__ void init_volume(FileSystem *fs)
     fs->superBlock_ptr->free_block_start = 0;
 
     fs->FCB_arr = reinterpret_cast<struct FCB *>(fs->volume + fs->SUPERBLOCK_SIZE);
-
     fs->fileContent_ptr = reinterpret_cast<uchar *>(fs->volume + fs->FILE_BASE_ADDRESS);
-#ifdef debug
-    printf("%u\n", fs->fileContent_ptr);
-#endif
 }
 
 __device__ u32 fs_open(FileSystem *fs, char *s, int op)
 {
-    u32 file_num = fs->superBlock_ptr->file_num;
+    u32 total_file = fs->superBlock_ptr->total_file;
     u16 free_block_start = fs->superBlock_ptr->free_block_start;
     // linear search file name
     int create_time = gtime++;
-    for (int i = 0; i < file_num; i++)
+    for (int i = 0; i < total_file; i++)
     {
         // 1. find
-
         if (my_strcmp(fs->FCB_arr[i].filename, s) == 0) // equal;
         {
             if (op == G_READ)
                 return i;
-
             else if (op == G_WRITE)
             {
                 // rm the file,
                 create_time = fs->FCB_arr[i].create_time;
-
-#ifdef debug
-                printf("rm fsb[%d] \n", i);
-                printf("Before remove: file_num=%d, free_block_start=%d free_block_count=%d \n", fs->superBlock_ptr->file_num, fs->superBlock_ptr->free_block_start, fs->superBlock_ptr->free_block_count);
-#endif
                 remove_file(fs, i);
-
-#ifdef debug
-                printf("After remove: file_num=%d, free_block_start=%d free_block_count=%d \n", fs->superBlock_ptr->file_num, fs->superBlock_ptr->free_block_start, fs->superBlock_ptr->free_block_count);
-#endif
             }
         }
     }
@@ -83,27 +68,24 @@ __device__ u32 fs_open(FileSystem *fs, char *s, int op)
     if (op == G_WRITE) // 2.1 op == G_READ
     {
         // create a file
-        int new_fp = fs->superBlock_ptr->file_num;
+        int new_fp = fs->superBlock_ptr->total_file++;
         my_strcpy(fs->FCB_arr[new_fp].filename, s);
 #ifdef sort_debug
         printf("COPY fp[%d]: %s-> %s \n", new_fp, s, fs->FCB_arr[new_fp].filename);
 #endif
         fs->FCB_arr[new_fp].modified_time = gtime++;
         fs->FCB_arr[new_fp].file_size = 0;
-        fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start;
+        fs->FCB_arr[new_fp].start_block = fs->superBlock_ptr->free_block_start++;
         fs->FCB_arr[new_fp].create_time = create_time;
 
-        fs->superBlock_ptr->free_block_start++;
         fs->superBlock_ptr->free_block_count--;
-        fs->superBlock_ptr->file_num++;
 #ifdef case3
-        printf("create fp: %d, size: %d, start_block: %d \n", fs->superBlock_ptr->file_num - 1, fs->FCB_arr[file_num].file_size, fs->FCB_arr[file_num].start_block);
+        printf("create fp: %d, size: %d, start_block: %d \n", fs->superBlock_ptr->total_file - 1, fs->FCB_arr[total_file].file_size, fs->FCB_arr[total_file].start_block);
 #endif
 
         return new_fp;
     }
 
-    // 2.2 return 0
     return ERROR;
 }
 
@@ -112,7 +94,6 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
     // 1. get physical start address from FCB
     // 2. get the end address from FCB (calculate from file size)
     // 3. read the file from disk to output buffer
-
     u16 start_block = fs->FCB_arr[fp].start_block;
     u16 file_size = fs->FCB_arr[fp].file_size;
     if (size > file_size)
@@ -125,7 +106,7 @@ __device__ void fs_read(FileSystem *fs, uchar *output, u32 size, u32 fp)
 #endif // debug
     for (u32 i = start_addr; i < end_addr; i++)
     {
-        output[i - start_addr] = *(fs->fileContent_ptr + i);
+        output[i - start_addr] = fs->fileContent_ptr[i];
 #ifdef debug
         printf("output[%d]: %c \n", i - start_addr, output[i - start_addr]);
 #endif
@@ -136,8 +117,6 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 {
 
     u16 file_size = fs->FCB_arr[fp].file_size;
-    // u32 create_time = fs->FCB_arr[fp].create_time;
-    // char* filename = fs->FCB_arr[fp].filename;
     u16 start_block = fs->FCB_arr[fp].start_block;
     u32 start_addr = start_block * fs->STORAGE_BLOCK_SIZE;
     int block_needs = (size + fs->STORAGE_BLOCK_SIZE - 1) / fs->STORAGE_BLOCK_SIZE;
@@ -147,7 +126,6 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 
     if (block_needs - origin_blocks > free_block_count) // need extra block exceeding total free blocks
     {
-        // not enough space ?
         printf("ERROR: no enough space!\n");
         return ERROR;
     }
@@ -158,7 +136,7 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 #endif
     for (u32 i = start_addr; i < start_addr + size; i++)
     {
-        *(fs->fileContent_ptr + i) = input[i - start_addr];
+        fs->fileContent_ptr[i] = input[i - start_addr];
     }
 
     // update FCB_arr
@@ -172,7 +150,7 @@ __device__ u32 fs_write(FileSystem *fs, uchar *input, u32 size, u32 fp)
 
 #ifdef sort_debug
     printf("----------\n");
-    for (int i = 0; i < fs->superBlock_ptr->file_num; i++)
+    for (int i = 0; i < fs->superBlock_ptr->total_file; i++)
     {
         printf("[%d].filename: %s \n", i, fs->FCB_arr[i].filename);
     }
@@ -189,7 +167,7 @@ __device__ void fs_gsys(FileSystem *fs, int op)
         // LS_S list all files name and size in the directory and order by size.
         // If there are several files with the same size, then first create first print.
         sort_file(fs, LS_S);
-        for (int i = 0; i < fs->superBlock_ptr->file_num; i++)
+        for (int i = 0; i < fs->superBlock_ptr->total_file; i++)
         {
             printf("%s %u\n", fs->FCB_arr[i].filename, fs->FCB_arr[i].file_size);
         }
@@ -200,7 +178,7 @@ __device__ void fs_gsys(FileSystem *fs, int op)
         // LS_D list all files name in the directory and order by modified time of files.
         sort_file(fs, LS_D);
 
-        for (int i = 0; i < fs->superBlock_ptr->file_num; i++)
+        for (int i = 0; i < fs->superBlock_ptr->total_file; i++)
         {
             printf("%s\n", fs->FCB_arr[i].filename);
         }
@@ -237,28 +215,25 @@ __device__ void remove_file(FileSystem *fs, int fp)
     printf("rm %d, file_size: %d, block_num: %d \n", fp, fs->FCB_arr[fp].file_size, block_num);
 #endif
     // update FCB
-    for (int i = fp; i < fs->superBlock_ptr->file_num - 1; i++)
+    for (int i = fp; i < fs->superBlock_ptr->total_file - 1; i++)
     {
         fs->FCB_arr[i] = fs->FCB_arr[i + 1];
         fs->FCB_arr[i].start_block -= block_num;
     }
     // update FILE CONTENT;
-    if (fp < fs->superBlock_ptr->file_num - 1)
+    if (fp < fs->superBlock_ptr->total_file - 1)
     {
         // compact
         compact(fs, block_num, start_block);
     }
 
-    fs->superBlock_ptr->file_num--;
+    fs->superBlock_ptr->total_file--;
     fs->superBlock_ptr->free_block_start -= (block_num);
     fs->superBlock_ptr->free_block_count += (block_num);
 }
 __device__ char *my_strcpy(char *dst, const char *src) //[1]
 {
-
     char *ret = dst; //[3]
-
-    //	while ((*dst++ = *src++) != '\0'); //[4]
     for (size_t i = 0; i < 20; i++)
     {
         if (*src == '\0')
@@ -267,13 +242,11 @@ __device__ char *my_strcpy(char *dst, const char *src) //[1]
         ++dst;
         ++src;
     }
-
     return ret;
 }
 __device__ int my_strcmp(char *s1, char *s2)
 {
-    int i = 0;
-    while (1)
+    for (int i = 0; i < 20; i++)
     {
         if (s1[i] != s2[i])
             return -1;
@@ -281,7 +254,6 @@ __device__ int my_strcmp(char *s1, char *s2)
         {
             return 0;
         }
-        i++;
     }
     return -1;
 }
@@ -294,7 +266,7 @@ __device__ void swap_fcb_blocks(FileSystem *fs, u32 a_id, u32 b_id)
 }
 __device__ void sort_file(FileSystem *fs, int op)
 {
-    int file_count = fs->superBlock_ptr->file_num;
+    int file_count = fs->superBlock_ptr->total_file;
     if (op == LS_S)
     {
         for (int fp = 0; fp < file_count - 1; fp++)
@@ -315,13 +287,6 @@ __device__ void sort_file(FileSystem *fs, int op)
     }
     else if (op == LS_D)
     {
-#ifdef sort_debug
-        printf("before sort: ======= \n");
-        for (int i = 0; i < file_count; i++)
-        {
-            printf("%s \n", fs->FCB_arr[i].filename);
-        }
-#endif
         for (int fp = 0; fp < file_count - 1; fp++)
         {
             for (int j = 0; j < file_count - 1 - fp; j++)
