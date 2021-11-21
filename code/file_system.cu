@@ -167,21 +167,12 @@ __device__ void fs_gsys(FileSystem *fs, int op)
         // LS_S list all files name and size in the directory and order by size.
         // If there are several files with the same size, then first create first print.
         sort_file(fs, LS_S);
-        for (int i = 0; i < fs->superBlock_ptr->total_file; i++)
-        {
-            printf("%s %u\n", fs->FCB_arr[i].filename, fs->FCB_arr[i].file_size);
-        }
     }
     else if (op == LS_D)
     {
         printf("===sort by modified time===\n");
         // LS_D list all files name in the directory and order by modified time of files.
         sort_file(fs, LS_D);
-
-        for (int i = 0; i < fs->superBlock_ptr->total_file; i++)
-        {
-            printf("%s\n", fs->FCB_arr[i].filename);
-        }
     }
 }
 
@@ -257,32 +248,38 @@ __device__ int my_strcmp(char *s1, char *s2)
     }
     return -1;
 }
-__device__ void swap_fcb_blocks(FileSystem *fs, u32 a_id, u32 b_id)
+__device__ void swap_fcb_blocks(struct FCB *FCB_arr, u32 a_id, u32 b_id)
 {
     FCB tmp_fcb;
-    tmp_fcb = fs->FCB_arr[a_id];
-    fs->FCB_arr[a_id] = fs->FCB_arr[b_id];
-    fs->FCB_arr[b_id] = tmp_fcb;
+    tmp_fcb = FCB_arr[a_id];
+    FCB_arr[a_id] = FCB_arr[b_id];
+    FCB_arr[b_id] = tmp_fcb;
 }
 __device__ void sort_file(FileSystem *fs, int op)
 {
     int file_count = fs->superBlock_ptr->total_file;
+    struct FCB *temp_FCB = fs->FCB_arr;
     if (op == LS_S)
     {
         for (int fp = 0; fp < file_count - 1; fp++)
         {
             for (int j = 0; j < file_count - 1 - fp; j++)
             {
-                if (fs->FCB_arr[j].file_size < fs->FCB_arr[j + 1].file_size)
+                if (temp_FCB[j].file_size < temp_FCB[j + 1].file_size)
                 {
-                    swap_fcb_blocks(fs, j, j + 1);
+                    swap_fcb_blocks(temp_FCB, j, j + 1);
                 }
-                else if (fs->FCB_arr[j].file_size == fs->FCB_arr[j + 1].file_size)
+                else if (temp_FCB[j].file_size == temp_FCB[j + 1].file_size)
                 {
-                    if (fs->FCB_arr[j].create_time > fs->FCB_arr[j + 1].create_time)
-                        swap_fcb_blocks(fs, j, j + 1);
+                    if (temp_FCB[j].create_time > temp_FCB[j + 1].create_time)
+                        swap_fcb_blocks(temp_FCB, j, j + 1);
                 }
             }
+        }
+        // print ...
+        for (int i = 0; i < file_count; i++)
+        {
+            printf("%s %u\n", temp_FCB[i].filename, temp_FCB[i].file_size);
         }
     }
     else if (op == LS_D)
@@ -291,11 +288,15 @@ __device__ void sort_file(FileSystem *fs, int op)
         {
             for (int j = 0; j < file_count - 1 - fp; j++)
             {
-                if (fs->FCB_arr[j].modified_time < fs->FCB_arr[j + 1].modified_time)
+                if (temp_FCB[j].modified_time < temp_FCB[j + 1].modified_time)
                 {
-                    swap_fcb_blocks(fs, j, j + 1);
+                    swap_fcb_blocks(temp_FCB, j, j + 1);
                 }
             }
+        }
+        for (int i = 0; i < file_count; i++)
+        {
+            printf("%s\n", temp_FCB[i].filename);
         }
     }
 }
