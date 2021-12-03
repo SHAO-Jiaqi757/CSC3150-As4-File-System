@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Report_119010256.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="report-file-system">Report-File System</h1>
+<p>Author: Shao Jiaqi<br>
+StudentID: 119010256</p>
+<h2 id="introduction">Introduction</h2>
+<h3 id="environment">Environment</h3>
+<p>I use the environment provided by CSC4005.</p>
+<pre class="hljs"><code><div>Operating System: CentOS Linux 7 (Core)
+</div></code></pre>
+<pre class="hljs"><code><div>$ g++ --version
+g++ (GCC) 4.8.5 20150623 (Red Hat 4.8.5-28)
+Copyright © 2015 Free Software Foundation, Inc.
+
+$ cmake --version
+cmake **version** 3.21.2
+</div></code></pre>
+<p>CUDA &amp; GPU Device</p>
+<pre class="hljs"><code><div>Device 0: &quot;NVIDIA GeForce RTX 2080 Ti&quot;
+deviceQuery, CUDA Driver = CUDART, CUDA Driver Version = 11.4, CUDA Runtime Version = 11.4, NumDevs = 1
+</div></code></pre>
+<h3 id="background">Background</h3>
+<p>The File system is a method and data structure that the operating system uses to control how data is stored and retrieved. By separating the data into pieces and giving each piece a name, the data is easily isolated and identified. Taking its name from the way paper-based data management system is named, each group of data is called a &quot;file.&quot; The structure and logic rules used to manage the groups of data and their names is called a &quot;file system&quot;.</p>
+<p>The File System is organized into layers: application programs-&gt;logical file system-&gt;file-organization module-&gt;base file system-&gt;I/O control-&gt;device. The application programs provide users with APIs to use system calls.The file organization module translates logical block to physical block, and manages free space and disk allocation.<br>
+In this project, I have implemented the functions of some APIs with structures: Volume Control Block--contains total # of blocks, # of free blocks... File Control Block--file size, time, filename...The structures are organized on GPU:<br>
+<img src="code/testcases/structures_GPU.png" alt=""></p>
+<p>The file system is simulated with only one directory (no subdirectory), and with multiple subdirectories (the max depth is 3) by a tree structure on GPU.</p>
+<h2 id="design-method">Design Method</h2>
+<h3 id="file-system-structure">File System Structure</h3>
+<ol>
+<li>
+<p>Super Block</p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">SuperBlock</span>
+ {</span>
+     <span class="hljs-keyword">int</span> free_block_count; <span class="hljs-comment">// how many free block</span>
+     u16 free_block_start; <span class="hljs-comment">// the first start free block number;</span>
+     <span class="hljs-keyword">int</span> total_file = <span class="hljs-number">0</span>;   <span class="hljs-comment">// how many files in the storge</span>
+ };
+</div></code></pre>
+</li>
+<li>
+<p>File Control Block</p>
+<pre class="hljs"><code><div><span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> pack(1)</span>
+ <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">FCB</span>
+ {</span>
+     u32 modified_time; <span class="hljs-comment">// 4 bytes</span>
+     u32 create_time;   <span class="hljs-comment">// 4 bytes</span>
+     u16 file_size;     <span class="hljs-comment">// 2 bytes</span>
+     u16 start_block;
+     <span class="hljs-keyword">char</span> filename[<span class="hljs-number">20</span>];
+ };
+ <span class="hljs-meta">#<span class="hljs-meta-keyword">pragma</span> pack()</span>
+</div></code></pre>
+</li>
+</ol>
+<p>Declaration in the File System:</p>
+<pre class="hljs"><code><div>    SuperBlock *superBlock_ptr;
+    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">FCB</span> *<span class="hljs-title">FCB_arr</span>;</span>
+    uchar *fileContent_ptr;
+</div></code></pre>
+<p>Directory structure (<strong>Bonus</strong>)<br>
+<img src="code/testcases/tree.png" alt=""></p>
+<h3 id="api">API</h3>
+<p><strong>fs_open(fs, name, G_READ/G_WRITE)</strong></p>
+<p><img src="code/testcases/fs_open.png" alt=""></p>
+<p><strong>fs_write(fs, input, size, fp)</strong></p>
+<pre class="hljs"><code><div>    <span class="hljs-keyword">for</span> (u32 i = start_addr; i &lt; start_addr + size; i++)
+    {
+        fs-&gt;fileContent_ptr[i] = input[i - start_addr];
+    } <span class="hljs-comment">// write to File Content from input buffer.</span>
+
+    <span class="hljs-comment">// update FCB_arr</span>
+    fs-&gt;FCB_arr[fp].file_size = size;
+    fs-&gt;FCB_arr[fp].modified_time = gtime++;
+
+    <span class="hljs-comment">// update superBlock_ptr</span>
+    <span class="hljs-keyword">int</span> delta_block = block_needs - origin_blocks;
+    fs-&gt;superBlock_ptr-&gt;free_block_count -= delta_block;
+    fs-&gt;superBlock_ptr-&gt;free_block_start += delta_block;
+</div></code></pre>
+<p><strong>fs_read(fs, output, size, fp)</strong></p>
+<ul>
+<li>fp =&gt; get <code>start_block</code> and <code>file_size</code></li>
+<li>Get physical start address and end address</li>
+<li>Read from File Content, and put result to <code>output</code> buffer.</li>
+</ul>
+<p><strong>fs_gsys(fs,RM, name)</strong></p>
+<p><img src="/code/testcases/remove_file.png" alt=""></p>
+<p><strong>fs_gsys (LS_D / LS_S)</strong></p>
+<ul>
+<li>Use Bubble Sort</li>
+<li>LS_D:LS_D list all files name in the directory and order by modified time of files, least modified, first print.</li>
+<li>LS_S: list all files name and size in the directory and order by descending size. If there are several files with the same size, then first create first print.</li>
+</ul>
+<p>--------Bonus----------</p>
+<p><strong>fs_open(fs, name, G_READ/G_WRITE)</strong></p>
+<ul>
+<li>update: when create a new file, modify the current directory's <code>file_size</code> and <code>modified_time</code>;</li>
+<li>update: when remove a file, modify the current directory's <code>file_size</code>;</li>
+</ul>
+<p><strong>fs_gsys(fs, MKDIR, name)</strong></p>
+<ul>
+<li>Similar with create an empty file in <code>fs_open</code></li>
+</ul>
+<p><strong>fs_gsys(fs,CD,name)</strong></p>
+<pre class="hljs"><code><div>fp = linear search to get FCD index by name;
+fs-&gt;curr_dir = fp; <span class="hljs-comment">// update the current directory;</span>
+</div></code></pre>
+<p><strong>fs_gsys(fs,CD_P)</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// change to the parent directory of the current directory;</span>
+fs-&gt;curr_dir = fs-&gt;FCB_arr[fs-&gt;curr_dir].parent;
+</div></code></pre>
+<p><strong>fs_gsys(fs,RM_RF,name)</strong></p>
+<pre class="hljs"><code><div><span class="hljs-comment">// recursive_remove_dir(fs, fp);</span>
+<span class="hljs-keyword">if</span> (directory fp is empty) remove the empty directory fp;
+<span class="hljs-keyword">for</span> (i in range of total files number) {
+    <span class="hljs-keyword">if</span> file i is a file {
+        remove file i;
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (file i is a directory) {
+        recursive_remove_dir(fs, i);
+    }
+}
+remove empty directory fp;
+</div></code></pre>
+<p><strong>fs_gsys(fs, PWD)</strong></p>
+<ul>
+<li>Back track the parent directory until reach to the root directory. Print out the current path.</li>
+</ul>
+<p><strong>fs_gsy(fs, LS_D\LS_S)</strong></p>
+<ul>
+<li>update: list the files as well as directories. For a file, list it name (with size) only. For a directory, add an symbol ‘d’ at the end.</li>
+</ul>
+<h2 id="execution">Execution</h2>
+<pre class="hljs"><code><div>.
+├── bonus
+├── code
+└── Report_119010256.pdf
+</div></code></pre>
+<pre class="hljs"><code><div><span class="hljs-comment"># under the code folder or the bonus folder ...</span>
+mkdir build &amp;&amp; <span class="hljs-built_in">cd</span> build 
+cmake .. 
+cp ./data.bin ./
+make -j4
+
+./cuda (or ./as4_bonus)
+</div></code></pre>
+<h2 id="result">Result</h2>
+<p><strong>1. TEST1</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="code/testcases/1_snapshot.png" alt="snapshot_test1"></td>
+<td><img src="code/testcases/1.png" alt="test1_output"></td>
+</tr>
+<tr>
+<td>&lt;Fig.3.1 TEST1's snapshot&gt;</td>
+<td>&lt;Fig.3.2 TEST1's output&gt;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>2. TEST2</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="code/testcases/2_snapshot.png" alt="snapshot_test2"></td>
+<td><img src="code/testcases/2.png" alt="test2_output"></td>
+</tr>
+<tr>
+<td>&lt;Fig.3.3 TEST2's snapshot&gt;</td>
+<td>&lt;Fig.3.4 TEST2's output&gt;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>3. TEST3</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="code/testcases/3_snapshot.png" alt="snapshot_test3"></td>
+<td><img src="code/testcases/3.png" alt="test3_output"></td>
+</tr>
+<tr>
+<td>&lt;Fig.3.5 TEST3's snapshot&gt;</td>
+<td>&lt;Fig.3.6 TEST3's output&gt;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>4. BONUS TEST</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="code/testcases/bonus_snapshot.png" alt="snapshot_test1"></td>
+<td><img src="code/testcases/bonus_out.png" alt="test1_output"></td>
+</tr>
+<tr>
+<td>&lt;Fig.3.7 BONUS TEST's snapshot&gt;</td>
+<td>&lt;Fig.3.8 BONUS TEST3's output&gt;</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="problem-encountered">Problem Encountered</h2>
+<p>Q: How to handle the external fragment?<br>
+A: Compaction. When remove a file, compact the BLOCK, and compact FCB.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>In this project, I have implemented the file system under only one directory and multiple directories. By implementing the functions, I have a better understanding of how the file system works, and how to design the data structure and logical methods.</p>
+
+</body>
+</html>
